@@ -19,14 +19,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="pt-BR">
+      <body className="bg-gray-950 text-white min-h-screen">
+        <nav className="bg-gray-800 text-white p-4 flex justify-center gap-8">
+          <a href="/" className="hover:text-cyan-400">Home</a>
+          <a href="/about" className="hover:text-cyan-400">Sobre</a>
+          <a href="/contact" className="hover:text-cyan-400">Contato</a>
+        </nav>
         {children}
       </body>
     </html>
