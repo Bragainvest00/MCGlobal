@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,15 +24,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR">
-      <body className="bg-gray-950 text-white min-h-screen">
+    <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="bg-gray-950 text-white min-h-screen font-sans">
         <nav className="bg-gray-800 text-white p-4 flex justify-center gap-8">
-          <a href="/" className="hover:text-cyan-400">Home</a>
-          <a href="/about" className="hover:text-cyan-400">Sobre</a>
-          <a href="/contact" className="hover:text-cyan-400">Contato</a>
+          <Link href="/" className="hover:text-cyan-400">Home</Link>
+          <Link href="/about" className="hover:text-cyan-400">Sobre</Link>
+          <Link href="/contact" className="hover:text-cyan-400">Contato</Link>
         </nav>
         {children}
       </body>
     </html>
   );
 }
+
