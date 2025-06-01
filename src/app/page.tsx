@@ -14,6 +14,7 @@ type DadosAtivo = {
   precoAtual: number;
   fechamentoAnterior: number;
   vies: Viés;
+  marketState: string; // novo campo para estado do mercado
 };
 
 const ativos: Ativo[] = [
@@ -47,7 +48,6 @@ function getVies(precoAtual: number, fechamentoAnterior: number): Viés {
 }
 
 function getMediaVies(vies: Viés[]): number {
-  // Alta = 1, Lateral = 0, Baixa = -1
   const valores = vies.map((v) => (v === "Alta" ? 1 : v === "Baixa" ? -1 : 0));
   const soma = valores.reduce((acc: number, val) => acc + val, 0);
   return valores.length > 0 ? soma / valores.length : 0;
@@ -80,7 +80,6 @@ function getCorETexto(media: number) {
 
 export default function Home() {
   const [dados, setDados] = useState<Record<string, DadosAtivo>>({});
-  const [ultimaAtualizacao, setUltimaAtualizacao] = useState<Date | null>(null);
 
   useEffect(() => {
     async function fetchDados() {
@@ -94,13 +93,16 @@ export default function Home() {
           const json = await res.json();
           const quote = json.quoteResponse.result[0];
 
-          // Usa fechamento anterior se precoAtual não disponível
-          const precoAtual =
-            quote.regularMarketPrice ??
-            quote.regularMarketPreviousClose ??
-            0;
-          const fechamentoAnterior =
-            quote.regularMarketPreviousClose ?? 0;
+          console.log("Dados do ativo", ativo.simbolo, quote); // log para debug
+
+          if (!quote) {
+            console.warn(`Sem dados para o ativo ${ativo.simbolo}`);
+            continue;
+          }
+
+          const precoAtual = quote.regularMarketPrice;
+          const fechamentoAnterior = quote.regularMarketPreviousClose;
+          const marketState = quote.marketState || "UNKNOWN";
 
           const vies = getVies(precoAtual, fechamentoAnterior);
 
@@ -108,18 +110,14 @@ export default function Home() {
             precoAtual,
             fechamentoAnterior,
             vies,
+            marketState,
           };
         } catch (error) {
-          console.error(
-            "Erro ao buscar dados do ativo",
-            ativo.simbolo,
-            error
-          );
+          console.error("Erro ao buscar dados do ativo", ativo.simbolo, error);
         }
       }
 
       setDados(newDados);
-      setUltimaAtualizacao(new Date());
     }
 
     fetchDados();
@@ -145,18 +143,12 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-950 text-white p-6">
       <header className="mb-8 border-b border-gray-700 pb-4">
-        <h1 className="text-3xl font-bold text-center text-cyan-400">
-          🌐 MCGlobal
-        </h1>
-        <p className="text-center text-sm text-gray-400">
-          Análise mundial do clima de mercado
-        </p>
+        <h1 className="text-3xl font-bold text-center text-cyan-400">🌐 MCGlobal</h1>
+        <p className="text-center text-sm text-gray-400">Análise mundial do clima de mercado</p>
       </header>
 
       <section>
-        <h2 className="text-xl font-semibold mb-4 text-cyan-300">
-          🌡️ Termômetro Global do Mercado
-        </h2>
+        <h2 className="text-xl font-semibold mb-4 text-cyan-300">🌡️ Termômetro Global do Mercado</h2>
 
         <div className="grid md:grid-cols-3 gap-4 mb-6">
           {["EUA", "Europa", "Ásia"].map((regiao) => {
@@ -174,19 +166,28 @@ export default function Home() {
                   {bandeira} {regiao}
                 </h3>
                 <p className={`text-sm ${textoCor}`}>{texto}</p>
+
+                {/* Mostrar o status do mercado e preço do primeiro ativo da região como exemplo */}
+                {ativos
+                  .filter((a) => a.regiao === regiao)
+                  .map((ativo) => {
+                    const d = dados[ativo.simbolo];
+                    if (!d) return null;
+                    return (
+                      <div key={ativo.simbolo} className="mt-2 text-xs text-gray-300">
+                        <strong>{ativo.nome}:</strong> R$ {d.precoAtual?.toFixed(2)}{" "}
+                        ({d.marketState})
+                      </div>
+                    );
+                  })}
               </div>
             );
           })}
         </div>
-        <p className="text-xs text-gray-500 text-center mt-2">
-          Última atualização:{" "}
-          {ultimaAtualizacao
-            ? ultimaAtualizacao.toLocaleString()
-            : "Carregando..."}
-        </p>
       </section>
 
       <Thermometer />
     </main>
   );
 }
+
