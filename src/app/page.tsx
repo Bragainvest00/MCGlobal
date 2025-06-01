@@ -80,6 +80,7 @@ function getCorETexto(media: number) {
 
 export default function Home() {
   const [dados, setDados] = useState<Record<string, DadosAtivo>>({});
+  const [ultimaAtualizacao, setUltimaAtualizacao] = useState<Date | null>(null);
 
   useEffect(() => {
     async function fetchDados() {
@@ -93,8 +94,13 @@ export default function Home() {
           const json = await res.json();
           const quote = json.quoteResponse.result[0];
 
-          const precoAtual = quote.regularMarketPrice;
-          const fechamentoAnterior = quote.regularMarketPreviousClose;
+          // Usa fechamento anterior se precoAtual não disponível
+          const precoAtual =
+            quote.regularMarketPrice ??
+            quote.regularMarketPreviousClose ??
+            0;
+          const fechamentoAnterior =
+            quote.regularMarketPreviousClose ?? 0;
 
           const vies = getVies(precoAtual, fechamentoAnterior);
 
@@ -104,11 +110,16 @@ export default function Home() {
             vies,
           };
         } catch (error) {
-          console.error("Erro ao buscar dados do ativo", ativo.simbolo, error);
+          console.error(
+            "Erro ao buscar dados do ativo",
+            ativo.simbolo,
+            error
+          );
         }
       }
 
       setDados(newDados);
+      setUltimaAtualizacao(new Date());
     }
 
     fetchDados();
@@ -167,6 +178,12 @@ export default function Home() {
             );
           })}
         </div>
+        <p className="text-xs text-gray-500 text-center mt-2">
+          Última atualização:{" "}
+          {ultimaAtualizacao
+            ? ultimaAtualizacao.toLocaleString()
+            : "Carregando..."}
+        </p>
       </section>
 
       <Thermometer />
