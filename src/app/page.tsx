@@ -55,12 +55,27 @@ function getMediaVies(vies: Viés[]): number {
 
 function getCorETexto(media: number) {
   if (media > 0.3) {
-    return { corBg: "bg-green-600/20", corBorda: "border-green-500", textoCor: "text-green-300", texto: "Tendência de alta" };
+    return {
+      corBg: "bg-green-600/20",
+      corBorda: "border-green-500",
+      textoCor: "text-green-300",
+      texto: "Tendência de alta",
+    };
   }
   if (media < -0.3) {
-    return { corBg: "bg-red-600/20", corBorda: "border-red-500", textoCor: "text-red-300", texto: "Baixa tensão no mercado" };
+    return {
+      corBg: "bg-red-600/20",
+      corBorda: "border-red-500",
+      textoCor: "text-red-300",
+      texto: "Baixa tensão no mercado",
+    };
   }
-  return { corBg: "bg-yellow-500/20", corBorda: "border-yellow-400", textoCor: "text-yellow-200", texto: "Mercado neutro" };
+  return {
+    corBg: "bg-yellow-500/20",
+    corBorda: "border-yellow-400",
+    textoCor: "text-yellow-200",
+    texto: "Mercado neutro",
+  };
 }
 
 export default function Home() {
@@ -72,7 +87,9 @@ export default function Home() {
 
       for (const ativo of ativos) {
         try {
-          const res = await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ativo.simbolo}`);
+          const res = await fetch(
+            `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ativo.simbolo}`
+          );
           const json = await res.json();
           const quote = json.quoteResponse.result[0];
 
@@ -96,7 +113,7 @@ export default function Home() {
 
     fetchDados();
 
-    const interval = setInterval(fetchDados, 300000); // 5 minutos
+    const interval = setInterval(fetchDados, 300000); // Atualiza a cada 5 minutos
 
     return () => clearInterval(interval);
   }, []);
@@ -117,12 +134,18 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-950 text-white p-6">
       <header className="mb-8 border-b border-gray-700 pb-4">
-        <h1 className="text-3xl font-bold text-center text-cyan-400">🌐 MCGlobal</h1>
-        <p className="text-center text-sm text-gray-400">Análise mundial do clima de mercado</p>
+        <h1 className="text-3xl font-bold text-center text-cyan-400">
+          🌐 MCGlobal
+        </h1>
+        <p className="text-center text-sm text-gray-400">
+          Análise mundial do clima de mercado
+        </p>
       </header>
 
       <section>
-        <h2 className="text-xl font-semibold mb-4 text-cyan-300">🌡️ Termômetro Global do Mercado</h2>
+        <h2 className="text-xl font-semibold mb-4 text-cyan-300">
+          🌡️ Termômetro Global do Mercado
+        </h2>
 
         <div className="grid md:grid-cols-3 gap-4 mb-6">
           {["EUA", "Europa", "Ásia"].map((regiao) => {
