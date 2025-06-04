@@ -1,6 +1,6 @@
 "use client";
-import Thermometer from "../components/Thermometer";
 import React, { useEffect, useState } from "react";
+import Thermometer from "../components/Thermometer";
 
 type Viés = "Alta" | "Baixa" | "Lateral";
 
@@ -14,7 +14,6 @@ type DadosAtivo = {
   precoAtual: number;
   fechamentoAnterior: number;
   vies: Viés;
-  marketState: string; // novo campo para estado do mercado
 };
 
 const ativos: Ativo[] = [
@@ -49,9 +48,10 @@ function getVies(precoAtual: number, fechamentoAnterior: number): Viés {
 
 function getMediaVies(vies: Viés[]): number {
   const valores = vies.map((v) => (v === "Alta" ? 1 : v === "Baixa" ? -1 : 0));
-  const soma = valores.reduce((acc: number, val) => acc + val, 0);
+  const soma = valores.reduce((acc: number, val: number) => acc + val, 0);
   return valores.length > 0 ? soma / valores.length : 0;
 }
+
 
 function getCorETexto(media: number) {
   if (media > 0.3) {
@@ -87,22 +87,12 @@ export default function Home() {
 
       for (const ativo of ativos) {
         try {
-          const res = await fetch(
-            `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ativo.simbolo}`
-          );
+          const res = await fetch(`/api/quote?symbols=${ativo.simbolo}`);
           const json = await res.json();
           const quote = json.quoteResponse.result[0];
 
-          console.log("Dados do ativo", ativo.simbolo, quote); // log para debug
-
-          if (!quote) {
-            console.warn(`Sem dados para o ativo ${ativo.simbolo}`);
-            continue;
-          }
-
           const precoAtual = quote.regularMarketPrice;
           const fechamentoAnterior = quote.regularMarketPreviousClose;
-          const marketState = quote.marketState || "UNKNOWN";
 
           const vies = getVies(precoAtual, fechamentoAnterior);
 
@@ -110,7 +100,6 @@ export default function Home() {
             precoAtual,
             fechamentoAnterior,
             vies,
-            marketState,
           };
         } catch (error) {
           console.error("Erro ao buscar dados do ativo", ativo.simbolo, error);
@@ -121,18 +110,11 @@ export default function Home() {
     }
 
     fetchDados();
-
-    const interval = setInterval(fetchDados, 300000); // Atualiza a cada 5 minutos
-
+    const interval = setInterval(fetchDados, 300000); // atualiza a cada 5 minutos
     return () => clearInterval(interval);
   }, []);
 
-  // Agrupa viés por região
-  const viesPorRegiao: Record<string, Viés[]> = {
-    EUA: [],
-    Europa: [],
-    Ásia: [],
-  };
+  const viesPorRegiao: Record<string, Viés[]> = { EUA: [], Europa: [], Ásia: [] };
 
   ativos.forEach(({ simbolo, regiao }) => {
     if (dados[simbolo]) {
@@ -154,32 +136,14 @@ export default function Home() {
           {["EUA", "Europa", "Ásia"].map((regiao) => {
             const media = getMediaVies(viesPorRegiao[regiao]);
             const { corBg, corBorda, textoCor, texto } = getCorETexto(media);
-            const bandeira =
-              regiao === "EUA" ? "🇺🇸" : regiao === "Europa" ? "🇪🇺" : "🇨🇳";
+            const bandeira = regiao === "EUA" ? "🇺🇸" : regiao === "Europa" ? "🇪🇺" : "🇨🇳";
 
             return (
-              <div
-                key={regiao}
-                className={`${corBg} p-4 rounded-xl border ${corBorda}`}
-              >
+              <div key={regiao} className={`${corBg} p-4 rounded-xl border ${corBorda}`}>
                 <h3 className="text-lg font-semibold">
                   {bandeira} {regiao}
                 </h3>
                 <p className={`text-sm ${textoCor}`}>{texto}</p>
-
-                {/* Mostrar o status do mercado e preço do primeiro ativo da região como exemplo */}
-                {ativos
-                  .filter((a) => a.regiao === regiao)
-                  .map((ativo) => {
-                    const d = dados[ativo.simbolo];
-                    if (!d) return null;
-                    return (
-                      <div key={ativo.simbolo} className="mt-2 text-xs text-gray-300">
-                        <strong>{ativo.nome}:</strong> R$ {d.precoAtual?.toFixed(2)}{" "}
-                        ({d.marketState})
-                      </div>
-                    );
-                  })}
               </div>
             );
           })}
