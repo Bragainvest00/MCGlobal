@@ -87,20 +87,21 @@ export default function Home() {
 
       for (const ativo of ativos) {
         try {
-          const res = await fetch(`/api/quote?symbols=${ativo.simbolo}`);
+          const res = await fetch("/api/cotacoes");
           const json = await res.json();
-          const quote = json.quoteResponse.result[0];
-
+      for (const quote of json.quoteResponse.result) {
           const precoAtual = quote.regularMarketPrice;
           const fechamentoAnterior = quote.regularMarketPreviousClose;
+          const simbolo = quote.symbol;
 
           const vies = getVies(precoAtual, fechamentoAnterior);
 
-          newDados[ativo.simbolo] = {
-            precoAtual,
-            fechamentoAnterior,
-            vies,
-          };
+  newDados[simbolo] = {
+    precoAtual,
+    fechamentoAnterior,
+    vies,
+  };
+}
         } catch (error) {
           console.error("Erro ao buscar dados do ativo", ativo.simbolo, error);
         }
